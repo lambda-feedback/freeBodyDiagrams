@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Drawing with Background Image, Eraser, and Download</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #canvasContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: url('stupid.png') no-repeat center center; /* Replace with your image URL */
+            background-size: cover;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: 1px solid black;
+        }
+        #toolbar {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid black;
+            background-color: white;
+            font-size: 16px;
+        }
+        #coordinates {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <button class="button" id="drawButton">Draw</button>
+        <button class="button" id="eraseButton">Eraser</button>
+        <button class="button" id="saveButton">Save as PNG</button>
+    </div>
+    <div id="canvasContainer">
+        <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    </div>
+    <div id="coordinates">x: 0, y: 0</div>
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const context = canvas.getContext('2d');
+        const coordinatesLabel = document.getElementById('coordinates');
+
+        let drawing = false;
+        let erasing = false;
+        let lastX, lastY;
+
+        function startDrawing(event) {
+            drawing = true;
+            [lastX, lastY] = getMousePos(event);
+            draw(event);
+        }
+
+        function stopDrawing() {
+            drawing = false;
+            context.beginPath();
+        }
+
+        function draw(event) {
+            if (!drawing) return;
+
+            const [x, y] = getMousePos(event);
+
+            context.lineWidth = erasing ? 30 : 5;
+            context.lineCap = 'round';
+            context.strokeStyle = erasing ? 'rgba(0,0,0,1)' : 'black';
+            context.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
+
+            context.beginPath();
+            context.moveTo(lastX, lastY);
+            context.lineTo(x, y);
+            context.stroke();
+            [lastX, lastY] = [x, y];
+        }
+
+        function getMousePos(event) {
+            const rect = canvas.getBoundingClientRect();
+            return [event.clientX - rect.left, event.clientY - rect.top];
+        }
+
+        function updateCoordinates(event) {
+            const [x, y] = getMousePos(event);
+            coordinatesLabel.textContent = `x: ${x.toFixed(0)}, y: ${y.toFixed(0)}`;
+        }
+
+        function toggleDrawingMode() {
+            erasing = false;
+        }
+
+        function toggleErasingMode() {
+            erasing = true;
+        }
+
+        function saveCanvasAsPNG() {
+            const link = document.createElement('a');
+            link.download = 'canvas-drawing.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        document.getElementById('drawButton').addEventListener('click', toggleDrawingMode);
+        document.getElementById('eraseButton').addEventListener('click', toggleErasingMode);
+        document.getElementById('saveButton').addEventListener('click', saveCanvasAsPNG);
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mousemove', updateCoordinates);
+        canvas.addEventListener('mouseleave', stopDrawing);
+    </script>
+</body>
+</html>
