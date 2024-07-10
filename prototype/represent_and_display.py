@@ -99,6 +99,65 @@ eg1 = CoordRepr(
 )
 """
 
+# representation for model answer
+@dataclass
+class AnswerNode:
+    #pos: vec2
+    label: str
+    metric: "vec2 -> float" # distance metric
+
+@dataclass
+class AnswerForce:
+    #pos: vec2
+    #direction: vec2
+    label: str
+    metric: "vec2 -> float" # distance metric
+
+    def dist(self, force):
+        return self.metric(...)
+
+@dataclass
+class AnswerMoment:
+    #pos: vec2
+    label: str
+    metric: "vec2 -> float" # distance metric
+
+    def dist(self, moment):
+        return self.metric(...)
+
+# metrics and stuff for determining how close a particular arrow is to it's ideal location
+def node_dist_metric(pos, scale=1):
+    return lambda xy: np.linalg.norm(xy - pos) / scale
+
+def force_dist_metric(pos,):
+    return ...
+
+@dataclass
+class AnswerDiagram:
+    # nodes
+    nodes: [AnswerNode]
+    forces: [AnswerForce]
+    moments: [AnswerMoment]
+
+    distances: ... # to be continued
+
+    tolerance: float # how far is it allowed to be from the actual answer
+
+    def check_diagram(self, coord_repr) -> bool:
+        total_cost = 0
+
+        # match forces up (hungarian algorithm)
+        cost_matrix = np.array([
+            [answer_force.metric(response_force) for response_force in coord_repr.forces]
+            for answer_force in self.forces])
+
+        row_ind, col_ind = scipy.optimize.linear_sum_assignment(cost_matrix)
+        cost = cost_matrix[row_ind, col_ind].sum()
+        total_cost += cost
+
+        # moments: hungarian algorithm
+        # TBC
+
 # test on example 3
 eg3 = CoordRepr(
     lines = [CoordLine((202, 283), (627, 283))],
@@ -114,12 +173,12 @@ eg3 = CoordRepr(
             label = "A_V",
         ),
         CoordForce(
-            pos = (125,41),
+            pos = (627, 283),
             direction = (0.1, -0.99),
             label = "F_1",
         ),
         CoordForce(
-            pos = (227,40),
+            pos = (415, 283),
             direction = (0.1, 0.99),
             label = "B_v",
         ),
@@ -127,71 +186,49 @@ eg3 = CoordRepr(
     moments = [CoordMoment((415, 283), False, "X")],
     distances = [
         CoordDistance(
-            line = CoordLine((202, 283), (415, 283)),
+            line = CoordLine((202, 287), (415, 287)),
             label = "L/2"
         ),
         CoordDistance(
-            line = CoordLine((415, 283), (627, 283)),
+            line = CoordLine((415, 291), (627, 291)),
             label = "L/2"
         ),
     ]
+)
+
+answer3 = AnswerDiagram(
+    nodes = [
+        #tbc
+    ],
+    forces = [
+        AnswerForce(
+            pos = vec2(202, 283),
+            direction = vec2(-0.99, 0.05),
+            label = "A_H",
+        ),
+        AnswerForce(
+            pos = vec2(202, 283),
+            direction = vec2(0.05, 0.99),
+            label = "A_V",
+        ),
+        AnswerForce(
+            pos = vec2(627, 283),
+            direction = vec2(0.1, -0.99),
+            label = "F_1",
+        ),
+        AnswerForce(
+            pos = vec2(415, 283),
+            direction = vec2(0.1, 0.99),
+            label = "B_v",
+        ),
+    ],
+    moments = [AnswerMoment((415, 283), False, "X")],
+
+    distances = [],
+    tolerance = 10
 )
 
 dwg = svgwrite.Drawing('test.svg')
 eg3.draw(dwg)
 dwg.save()
 
-"""
-idea: we start with the 
-
-nodes
-    given a starting position, might move around
-forces
-    they have a position and we match them to nodes
-    we also round the direction if possible, and if not possible, we will require some sort of information such as angles
-moments
-    treat in same way as forces, but ignore direction
-
-distances
-    compare with list of equations
-"""
-
-# representation for model answer
-@dataclass
-class AnswerNode:
-    initial_pos: vec2
-    metric: "vec2 -> float" # distance metric
-
-@dataclass
-class AnswerForce:
-    initial_pos: vec2
-    direction: vec2
-    label: vec2
-    metric: "vec2 -> float" # distance metric
-
-@dataclass
-class AnswerMoment:
-    initial_pos: vec2
-    label: vec2
-    metric: "vec2 -> float" # distance metric
-
-# metrics and stuff for determining how close a particular arrow is
-def node_dist_metric(pos, scale=1):
-    return lambda xy: np.linalg.norm(xy - pos) / scale
-
-@dataclass
-class AnswerDiagram:
-    # nodes
-    nodes: [AnswerNode]
-    forces: [AnswerForce]
-    moments: [AnswerMoment]
-
-    def check_diagram(self, coord_repr):
-        # match forces up
-
-        cost_matrix = np.array([
-            [answer_force.metric(response_force) for response_force in coord_repr.forces]
-            for answer_force in self.forces])
-
-        row_ind, col_ind = scipy.optimize.linear_sum_assignment(cost_matrix)
-        centres = []
