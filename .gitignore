@@ -132,4 +132,4 @@ dmypy.json
 .vscode
 
 # svg output
-.svg
+*.svg
