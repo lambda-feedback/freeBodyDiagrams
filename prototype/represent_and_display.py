@@ -2,6 +2,7 @@ import svgwrite
 from dataclasses import dataclass
 import numpy as np
 import scipy
+import json
 
 """
 dwg.add(dwg.line((0, 0), (100, 0), stroke=svgwrite.rgb(10, 10, 16, '%')))
@@ -11,8 +12,13 @@ dwg.add(dwg.text('Test', insert=(0, 0.2), fill='red'))
 dwg.save()
 """
 
+norm = np.linalg.norm
+
 def vec2(x, y):
     return np.array((x,y))
+
+def vec_to_tuple(vec):
+    return tuple(int(v) for v in vec)
 
 @dataclass
 class CoordLine:
@@ -46,19 +52,21 @@ class CoordRepr:
 
     def draw(self, dwg):
         for line in self.lines:
-            dwg.add(dwg.line(line.pos1, line.pos2,
-                             stroke=svgwrite.rgb(0, 0, 0, '%')))
+            dwg.add(dwg.line(vec_to_tuple(line.pos1), vec_to_tuple(line.pos2),
+                             stroke=svgwrite.rgb(0, 0, 0, '%'),
+                             stroke_width=5))
 
         for force in self.forces:
-            dwg.add(dwg.line(force.pos,
-                             tuple(np.array(force.pos) - np.array(force.direction)*20),
+            dwg.add(dwg.line(vec_to_tuple(force.pos),
+                             vec_to_tuple(np.array(force.pos) - np.array(force.direction)*20),
                              stroke=svgwrite.rgb(0, 128, 0, '%')))
 
         for dist in self.distances:
-            pos = tuple(0.5 * (np.array(dist.line.pos1) + np.array(dist.line.pos2)))
-            dwg.add(dwg.line(dist.line.pos1, dist.line.pos2,
+            pos = vec_to_tuple(0.5 * (np.array(dist.line.pos1) + np.array(dist.line.pos2)))
+            dwg.add(dwg.line(vec_to_tuple(dist.line.pos1), vec_to_tuple(dist.line.pos2),
                              stroke=svgwrite.rgb(0, 0, 128, '%')))
             dwg.add(dwg.text(dist.label, insert=pos, fill='red'))
+
 """
 # eg 1
 eg1 = CoordRepr(
@@ -99,136 +107,139 @@ eg1 = CoordRepr(
 )
 """
 
+# context for the problem (which variables are defined, etc.)
+class SymbolContext:
+    def __init__(self) -> None:
+        pass
+
 # representation for model answer
 @dataclass
-class AnswerNode:
-    #pos: vec2
-    label: str
-    metric: "vec2 -> float" # distance metric
-
-@dataclass
 class AnswerForce:
-    #pos: vec2
-    #direction: vec2
+    pos: vec2
+    direction: vec2 # not normalised, normalise it yourself
     label: str
-    metric: "vec2 -> float" # distance metric
+    metric: "... -> float" # distance metric
 
     def dist(self, force):
-        return self.metric(...)
+        return self.metric(self, force)
 
 @dataclass
 class AnswerMoment:
-    #pos: vec2
+    pos: vec2
     label: str
-    metric: "vec2 -> float" # distance metric
+    clockwise: bool
+    metric: "... -> float" # distance metric
 
     def dist(self, moment):
-        return self.metric(...)
+        return self.metric(self, moment)
 
 # metrics and stuff for determining how close a particular arrow is to it's ideal location
-def node_dist_metric(pos, scale=1):
-    return lambda xy: np.linalg.norm(xy - pos) / scale
+def node_metric(scale=1):
+    return lambda target, node: norm(node.pos - target.pos) / scale
 
-def force_dist_metric(pos,):
-    return ...
+def force_metric():
+    def fn(target, ans):
+        dist = norm(target.pos - ans.pos)
+        dot = (target.direction * ans.direction).sum() / (norm(target.direction) * norm(ans.direction))
+        return dist*dist + 500 * (1-dot)**2
+    return fn
+
+def moment_metric():
+    def fn(target, ans):
+        dist = norm(target.pos - ans.pos)
+        # ... tbc
+        return dist
+    return fn
+
+# QOL function
+def DIRECTION(theta) -> vec2:
+    theta *= np.pi / 180
+    return vec2(np.cos(theta), np.sin(theta))
+
+def hungarian(target, ans):
+    # not limited to forces
+    cost_matrix = np.array([
+        [answer_force.dist(response_force) for response_force in ans]
+        for answer_force in target])
+
+    row_ind, col_ind = scipy.optimize.linear_sum_assignment(cost_matrix)
+    cost = cost_matrix[row_ind, col_ind].sum()
+    return cost
+
+def compare_labels(target, answer, context: SymbolContext) -> bool:
+    # defer to karl's program
+    # oversimplified implementation for now
+    return target == answer
+
+@dataclass
+class AnswerNode:
+    ...
+    label: str
+    metric: "... -> float" # distance metric
+
+    def get_pos():
+        return ...
+
+@dataclass
+class AnswerDistance:
+    start_node: AnswerNode
+    end_node: AnswerNode
+    label: str
+    metric: "... -> float" # distance metric
 
 @dataclass
 class AnswerDiagram:
     # nodes
-    nodes: [AnswerNode]
     forces: [AnswerForce]
     moments: [AnswerMoment]
 
-    distances: ... # to be continued
+    context: SymbolContext # symbols we can use, etc.
+
+    # figure out where answer nodes are and 
+    nodes: [AnswerNode]
+    distances: [AnswerDistance] # to be continued
 
     tolerance: float # how far is it allowed to be from the actual answer
 
     def check_diagram(self, coord_repr) -> bool:
         total_cost = 0
 
-        # match forces up (hungarian algorithm)
-        cost_matrix = np.array([
-            [answer_force.metric(response_force) for response_force in coord_repr.forces]
-            for answer_force in self.forces])
-
-        row_ind, col_ind = scipy.optimize.linear_sum_assignment(cost_matrix)
-        cost = cost_matrix[row_ind, col_ind].sum()
-        total_cost += cost
+        # match forces up
+        total_cost += hungarian(self.forces, coord_repr.forces)
 
         # moments: hungarian algorithm
-        # TBC
+        total_cost += hungarian(self.moments, coord_repr.moments)
 
-# test on example 3
-eg3 = CoordRepr(
-    lines = [CoordLine((202, 283), (627, 283))],
-    forces = [
-        CoordForce(
-            pos = (202, 283),
-            direction = (-0.99, 0.05),
-            label = "A_H",
-        ),
-        CoordForce(
-            pos = (202, 283),
-            direction = (0.05, 0.99),
-            label = "A_V",
-        ),
-        CoordForce(
-            pos = (627, 283),
-            direction = (0.1, -0.99),
-            label = "F_1",
-        ),
-        CoordForce(
-            pos = (415, 283),
-            direction = (0.1, 0.99),
-            label = "B_v",
-        ),
-    ],
-    moments = [CoordMoment((415, 283), False, "X")],
-    distances = [
-        CoordDistance(
-            line = CoordLine((202, 287), (415, 287)),
-            label = "L/2"
-        ),
-        CoordDistance(
-            line = CoordLine((415, 291), (627, 291)),
-            label = "L/2"
-        ),
-    ]
-)
+        return total_cost - self.tolerance
+    
+    def check_distances(self, coord_repr) -> bool:
+        pass
 
-answer3 = AnswerDiagram(
-    nodes = [
-        #tbc
-    ],
-    forces = [
-        AnswerForce(
-            pos = vec2(202, 283),
-            direction = vec2(-0.99, 0.05),
-            label = "A_H",
-        ),
-        AnswerForce(
-            pos = vec2(202, 283),
-            direction = vec2(0.05, 0.99),
-            label = "A_V",
-        ),
-        AnswerForce(
-            pos = vec2(627, 283),
-            direction = vec2(0.1, -0.99),
-            label = "F_1",
-        ),
-        AnswerForce(
-            pos = vec2(415, 283),
-            direction = vec2(0.1, 0.99),
-            label = "B_v",
-        ),
-    ],
-    moments = [AnswerMoment((415, 283), False, "X")],
+def decode_JSON(file_path):
+    with open(file_path, 'r') as file:
+        data = json.load(file)
 
-    distances = [],
-    tolerance = 10
-)
+    distances = []
+    forces = []
+    moments = []
 
-dwg = svgwrite.Drawing('test.svg')
-eg3.draw(dwg)
-dwg.save()
+    for arrow in data.get('distance_markers', []):
+        line = CoordLine(pos1=vec2(arrow['startX'], arrow['startY']),
+                         pos2=vec2(arrow['endX'], arrow['endY']))
+        distances.append(CoordDistance(line=line, label=arrow['text']))
 
+    for arrow in data.get('forces', []):
+        start_vec = vec2(arrow['startX'], arrow['startY'])
+        end_vec = vec2(arrow['endX'], arrow['endY'])
+        direction = end_vec - start_vec
+        forces.append(CoordForce(pos=start_vec, direction=direction, label=arrow['text']))
+
+    for arrow in data.get('moments', []):
+        start_vec = vec2(arrow['startX'], arrow['startY'])
+        end_vec = vec2(arrow['endX'], arrow['endY'])
+        direction = end_vec - start_vec
+        clockwise = np.cross(direction, np.array([0, -1])) < 0
+        moments.append(CoordMoment(pos=start_vec, clockwise=clockwise, label=arrow['text']))
+
+    # no lines for now
+    return CoordRepr([], distances, forces, moments)

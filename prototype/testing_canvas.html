@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Drawing with Arrows</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #canvasContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: url('questions/skeleton1.svg') no-repeat center center; /* Replace with your image URL */
+            background-size: cover;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: 1px solid black;
+        }
+        #toolbar {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .button, .input-box, .dropdown {
+            margin: 0 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid black;
+            background-color: white;
+            font-size: 16px;
+        }
+        #coordinates {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <input type="text" id="textInput" class="input-box" placeholder="Enter text">
+        <select id="arrowType" class="dropdown">
+            <option value="oneWay">One Way Arrow</option>
+            <option value="twoWay">Two Way Arrow</option>
+            <option value="curved">Curved Arrow</option>
+        </select>
+        <button class="button" id="saveButton">Save as Text</button>
+    </div>
+    <div id="canvasContainer">
+        <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    </div>
+    <div id="coordinates">x: 0, y: 0</div>
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const context = canvas.getContext('2d');
+        const coordinatesLabel = document.getElementById('coordinates');
+        const textInput = document.getElementById('textInput');
+        const arrowTypeSelect = document.getElementById('arrowType');
+
+        let drawing = false;
+        let moving = false;
+        let draggingStartPoint = false;
+        let startX, startY, endX, endY;
+        let currentArrows = [];
+        let selectedArrow = null;
+        const arrowHeadLength = 10;
+
+        function startDrawing(event) {
+            if (moving || event.button === 2) return; // Don't start a new arrow if we are moving an existing one or right mouse button is used
+            drawing = true;
+            [startX, startY] = getMousePos(event);
+            [endX, endY] = [startX, startY];
+        }
+
+        function stopDrawing(event) {
+            if (!drawing) return;
+            drawing = false;
+            const arrow = { startX, startY, endX, endY, type: arrowTypeSelect.value, text: textInput.value };
+            currentArrows.push(arrow);
+            redrawCanvas();
+        }
+
+        function getMousePos(event) {
+            const rect = canvas.getBoundingClientRect();
+            return [event.clientX - rect.left, event.clientY - rect.top];
+        }
+
+        function drawArrow(arrow, isPreview = false) {
+            const { startX, startY, endX, endY, type, text } = arrow;
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const angle = Math.atan2(dy, dx);
+
+            context.beginPath();
+            if (type === 'curved') {
+                const cpX = (startX + endX) / 2 + (endY - startY) / 2;
+                const cpY = (startY + endY) / 2 - (endX - startX) / 2;
+                context.moveTo(startX, startY);
+                context.quadraticCurveTo(cpX, cpY, endX, endY);
+                context.stroke();
+                if (!isPreview) drawArrowHead(endX, endY, Math.atan2(endY - cpY, endX - cpX));
+            } else {
+                context.moveTo(startX, startY);
+                context.lineTo(endX, endY);
+                context.stroke();
+                drawArrowHead(endX, endY, angle);
+                if (type === 'twoWay') drawArrowHead(startX, startY, angle + Math.PI);
+            }
+            
+            if (text && !isPreview) {
+                context.fillText(text, endX + 5, endY - 5);
+            }
+        }
+
+        function drawArrowHead(x, y, angle) {
+            context.beginPath();
+            context.moveTo(x, y);
+            context.lineTo(x - arrowHeadLength * Math.cos(angle - Math.PI / 6), y - arrowHeadLength * Math.sin(angle - Math.PI / 6));
+            context.moveTo(x, y);
+            context.lineTo(x - arrowHeadLength * Math.cos(angle + Math.PI / 6), y - arrowHeadLength * Math.sin(angle + Math.PI / 6));
+            context.stroke();
+        }
+
+        function updateCoordinates(event) {
+            const [x, y] = getMousePos(event);
+            coordinatesLabel.textContent = `x: ${x.toFixed(0)}, y: ${y.toFixed(0)}`;
+            if (drawing) {
+                [endX, endY] = [x, y];
+                redrawCanvas(true);
+            } else if (moving && selectedArrow) {
+                if (draggingStartPoint) {
+                    selectedArrow.startX = x;
+                    selectedArrow.startY = y;
+                } else {
+                    selectedArrow.endX = x;
+                    selectedArrow.endY = y;
+                }
+                redrawCanvas();
+            }
+        }
+
+        function redrawCanvas(isPreview = false) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            currentArrows.forEach(arrow => drawArrow(arrow));
+            if (isPreview && drawing) {
+                drawArrow({ startX, startY, endX, endY, type: arrowTypeSelect.value, text: textInput.value }, true);
+            }
+        }
+
+        function selectArrow(event) {
+            const [x, y] = getMousePos(event);
+            selectedArrow = currentArrows.find(arrow => {
+                const distanceToStart = Math.hypot(arrow.startX - x, arrow.startY - y);
+                const distanceToEnd = Math.hypot(arrow.endX - x, arrow.endY - y);
+                if (distanceToStart < 10) {
+                    draggingStartPoint = true;
+                    return true;
+                }
+                if (distanceToEnd < 10) {
+                    draggingStartPoint = false;
+                    return true;
+                }
+                return false;
+            });
+            if (selectedArrow) {
+                moving = true;
+                [startX, startY] = [x, y];
+            }
+        }
+
+        function deleteArrow(event) {
+            const [x, y] = getMousePos(event);
+            currentArrows = currentArrows.filter(arrow => {
+                const distanceToStart = Math.hypot(arrow.startX - x, arrow.startY - y);
+                const distanceToEnd = Math.hypot(arrow.endX - x, arrow.endY - y);
+                return distanceToStart >= 10 && distanceToEnd >= 10;
+            });
+            redrawCanvas();
+        }
+
+        function saveCanvasAsJSON() {
+            const categorizedArrows = {
+                distance_markers: [],
+                forces: [],
+                moments: []
+            };
+
+            currentArrows.forEach(arrow => {
+                const arrowData = {
+                    startX: arrow.startX,
+                    startY: arrow.startY,
+                    endX: arrow.endX,
+                    endY: arrow.endY,
+                    text: arrow.text
+                };
+
+                switch (arrow.type) {
+                    case 'oneWay':
+                        categorizedArrows.forces.push(arrowData);
+                        break;
+                    case 'twoWay':
+                        categorizedArrows.distance_markers.push(arrowData);
+                        break;
+                    case 'curved':
+                        categorizedArrows.moments.push(arrowData);
+                        break;
+                }
+            });
+
+            const jsonData = JSON.stringify(categorizedArrows, null, 2);
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.download = 'canvas-drawing.json';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+
+
+        document.getElementById('saveButton').addEventListener('click', saveCanvasAsJSON);
+        canvas.addEventListener('mousedown', event => {
+            if (moving) {
+                moving = false;
+                selectedArrow = null;
+            } else if (event.button === 2) {
+                deleteArrow(event);
+            } else {
+                selectArrow(event) || startDrawing(event);
+            }
+        });
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mousemove', updateCoordinates);
+        canvas.addEventListener('contextmenu', event => event.preventDefault());
+        canvas.addEventListener('mouseleave', () => drawing = false);
+    </script>
+</body>
+</html>
