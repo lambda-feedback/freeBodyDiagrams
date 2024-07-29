@@ -248,7 +248,7 @@
             .then(response => response.json())
             .then(data => {
                 //alert('Feedback: ' + data.feedback);
-                feedback.textContent = data.feedback + ` (${count})`;
+                feedback.innerHTML = data.feedback + ` (${count})`;
                 count++;
                 sendDiagram();
             })

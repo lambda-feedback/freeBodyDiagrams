@@ -99,7 +99,7 @@ def decode_JSON(data):
         moments.append(CoordMoment(pos=start_vec, clockwise=clockwise, label=arrow['text']))
 
     # no lines for now
-    return CoordRepr([], distances, forces, moments)
+    return CoordRepr([], forces, moments, distances)
 
 """
 dwg.add(dwg.line((0, 0), (100, 0), stroke=svgwrite.rgb(10, 10, 16, '%')))

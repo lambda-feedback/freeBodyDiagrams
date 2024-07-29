@@ -67,7 +67,7 @@ def hungarian(target, ans):
 
     row_ind, col_ind = scipy.optimize.linear_sum_assignment(cost_matrix)
     cost = cost_matrix[row_ind, col_ind].sum()
-    return cost
+    return cost_matrix[row_ind, col_ind], cost
 
 def compare_labels(target, answer, context: SymbolContext) -> bool:
     # defer to karl's program
@@ -108,12 +108,15 @@ class AnswerDiagram:
         total_cost = 0
 
         # match forces up
-        total_cost += hungarian(self.forces, coord_repr.forces)
+        cost_trace1, cost = hungarian(self.forces, coord_repr.forces)
+        total_cost += cost
 
         # moments: hungarian algorithm
-        total_cost += hungarian(self.moments, coord_repr.moments)
+        cost_trace2, cost = hungarian(self.moments, coord_repr.moments)
+        total_cost += cost
 
-        return total_cost - self.tolerance
+        return total_cost - self.tolerance, f"{(list(cost_trace1), len(self.forces), len(coord_repr.forces))} <br>\
+              {list(cost_trace2)} {len(self.moments)} {len(coord_repr.moments)}"
     
     def check_distances(self, coord_repr) -> bool:
         # skeleton

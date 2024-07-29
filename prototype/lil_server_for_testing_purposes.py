@@ -12,7 +12,7 @@ def judge(diagram):
     # Process the diagram and return feedback
     ans = testing.answer3
     score = ans.check_diagram(diagram)
-    feedback = f"This is a feedback message based on the diagram. {score}"
+    feedback = f"This is a feedback message based on the diagram. <br> {score[0]}<br>" + score[1]
     return feedback
 
 @app.route('/upload', methods=['POST'])
