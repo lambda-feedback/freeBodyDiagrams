@@ -1,8 +1,8 @@
 import copy
 from sympy import Matrix, zeros, shape
 
-from .expression_utilities import create_sympy_parsing_params
-from .expression_utilities import parse_expression
+from expression_utilities import create_sympy_parsing_params
+from expression_utilities import parse_expression
 
 def parse_matrix(m_strings, parsing_params):
     matrix = []

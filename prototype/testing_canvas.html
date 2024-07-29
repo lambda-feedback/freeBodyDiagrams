@@ -54,17 +54,20 @@
             <option value="curved">Curved Arrow</option>
         </select>
         <button class="button" id="saveButton">Save as Text</button>
+        <button class="button" id="sendButton" onclick="sendDiagram()">Send Diagram</button>
     </div>
     <div id="canvasContainer">
         <canvas id="drawingCanvas" width="800" height="600"></canvas>
     </div>
     <div id="coordinates">x: 0, y: 0</div>
+    <div id="feedback">feedback</div>
     <script>
         const canvas = document.getElementById('drawingCanvas');
         const context = canvas.getContext('2d');
         const coordinatesLabel = document.getElementById('coordinates');
         const textInput = document.getElementById('textInput');
         const arrowTypeSelect = document.getElementById('arrowType');
+        const feedback = document.getElementById('feedback');
 
         let drawing = false;
         let moving = false;
@@ -187,11 +190,12 @@
             redrawCanvas();
         }
 
-        function saveCanvasAsJSON() {
+        function getCanvasData() {
             const categorizedArrows = {
                 distance_markers: [],
                 forces: [],
-                moments: []
+                moments: [],
+                question_name: "q1"
             };
 
             currentArrows.forEach(arrow => {
@@ -215,6 +219,11 @@
                         break;
                 }
             });
+            return categorizedArrows;
+        }
+
+        function saveCanvasAsJSON() {
+            const categorizedArrows = getCanvasData();
 
             const jsonData = JSON.stringify(categorizedArrows, null, 2);
             const blob = new Blob([jsonData], { type: 'application/json' });
@@ -223,6 +232,33 @@
             link.href = URL.createObjectURL(blob);
             link.click();
         }
+
+        let count = 0;
+
+        function sendDiagram() {
+            const diagram = getCanvasData();
+
+            fetch('http://localhost:5000/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(diagram)
+            })
+            .then(response => response.json())
+            .then(data => {
+                //alert('Feedback: ' + data.feedback);
+                feedback.textContent = data.feedback + ` (${count})`;
+                count++;
+                sendDiagram();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                sendDiagram();
+            });
+        }
+
+        setTimeout(sendDiagram, 100);
 
 
         document.getElementById('saveButton').addEventListener('click', saveCanvasAsJSON);

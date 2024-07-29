@@ -1,4 +1,4 @@
-from represent_and_display import *
+from judge import *
 
 # test on example 3
 eg3 = CoordRepr(
@@ -71,7 +71,7 @@ answer3 = AnswerDiagram(
     moments = [AnswerMoment(vec2(415, 283), False, "X", metric = moment_metric())],
 
     distances = [],
-    tolerance = 200,
+    tolerance = 10,
 
     context = ...
 )
@@ -92,4 +92,4 @@ dwg.save()
 
 #print(answer3.check_diagram(eg3))
 
-#x = decode_JSON("./canvas-drawing.json")    
+#x = decode_JSON(load_JSON("./canvas-drawing.json"))    
