@@ -11,16 +11,21 @@ CORS(app)
 def judge(diagram):
     # Process the diagram and return feedback
     ans = testing.answer3
-    score = ans.check_diagram(diagram)
-    feedback = f"This is a feedback message based on the diagram. <br> {score[0]}<br>" + score[1]
-    return feedback
+    feedback = ans.check_diagram(diagram)
+    return jsonify({'feedback': f"""score: {feedback.score} <br>
+surplus forces: {feedback.surplus_forces} <br>
+surplus moments: {feedback.surplus_moments} <br>
+distances: """ + feedback.distance_feedback,
+        'warnings': [{'x': 100, 'y': 100}]
+    })
+            
+
 
 @app.route('/upload', methods=['POST'])
 def judge_diagram():
     data = request.json
     diagram = decode_JSON(data)
-    feedback = judge(diagram)
-    return jsonify({'feedback': feedback})
+    return judge(diagram)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)

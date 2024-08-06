@@ -1,11 +1,8 @@
 import svgwrite
 from dataclasses import dataclass
 import numpy as np
-import scipy
 import json
 
-import parse_matrices
-import expression_utilities
 
 """
 dwg.add(dwg.line((0, 0), (100, 0), stroke=svgwrite.rgb(10, 10, 16, '%')))

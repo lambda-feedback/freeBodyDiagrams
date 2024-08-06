@@ -47,23 +47,23 @@ answer3 = AnswerDiagram(
             pos = vec2(202, 283),
             direction = DIRECTION(180),
             label = "A_H",
-            metric = force_metric()
+            metric = force_metric(bidirectional=True)
         ),
         AnswerForce(
             pos = vec2(202, 283),
             direction = DIRECTION(90),
             label = "A_V",
-            metric = force_metric()
+            metric = force_metric(bidirectional=True)
         ),
         AnswerForce(
             pos = vec2(627, 283),
-            direction = DIRECTION(-90), #vec2(0.1, -0.99),
+            direction = DIRECTION(-90),
             label = "F_1",
             metric = force_metric()
         ),
         AnswerForce(
             pos = vec2(415, 283),
-            direction = DIRECTION(90), #vec2(0.1, 0.99),
+            direction = DIRECTION(90),
             label = "B_v",
             metric = force_metric()
         ),
@@ -71,7 +71,7 @@ answer3 = AnswerDiagram(
     moments = [AnswerMoment(vec2(415, 283), False, "X", metric = moment_metric())],
 
     distances = [],
-    tolerance = 10,
+    tolerance = 15,
 
     context = ...
 )

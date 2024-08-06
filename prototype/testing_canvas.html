@@ -77,6 +77,8 @@
         let selectedArrow = null;
         const arrowHeadLength = 10;
 
+        let warnings = [];
+
         function startDrawing(event) {
             if (moving || event.button === 2) return; // Don't start a new arrow if we are moving an existing one or right mouse button is used
             drawing = true;
@@ -151,9 +153,17 @@
             }
         }
 
+        const warningImage = new Image();
+        warningImage.src = 'warning.png';
+
         function redrawCanvas(isPreview = false) {
             context.clearRect(0, 0, canvas.width, canvas.height);
             currentArrows.forEach(arrow => drawArrow(arrow));
+            warnings.forEach(warning => { 
+                // draw the image "warning.png" at the position (warning.x, warning.y) with size 50x50
+                context.drawImage(warningImage, 100, 100, 50, 50);
+                console.log("hii");
+            });
             if (isPreview && drawing) {
                 drawArrow({ startX, startY, endX, endY, type: arrowTypeSelect.value, text: textInput.value }, true);
             }
@@ -249,16 +259,15 @@
             .then(data => {
                 //alert('Feedback: ' + data.feedback);
                 feedback.innerHTML = data.feedback + ` (${count})`;
+                warnings = data.warnings;
                 count++;
-                sendDiagram();
             })
             .catch((error) => {
                 console.error('Error:', error);
-                sendDiagram();
             });
         }
 
-        setTimeout(sendDiagram, 100);
+        setInterval(sendDiagram, 1000);
 
 
         document.getElementById('saveButton').addEventListener('click', saveCanvasAsJSON);
