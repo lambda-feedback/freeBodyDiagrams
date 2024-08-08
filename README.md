@@ -29,3 +29,4 @@ This is one big loose end, so I will lay out what I have looked at so far:
  - Most of the difficulty comes from **creating and labelling training data**.
  - My plan was to **create a website that displays arrows (etc), and then asks the users to draw over them, and then creates training data from that**. I have started work on that, but there is an alternative (see next point).
  - There is a website, **roboflow**, which claims to provide tools to help label the data and build/train the model, even going so far as labelling it automatically. You may need to **look into the liscence**, as it is not for commercial use.
+ - potentially useful: [opencv.org](https://opencv.org/)

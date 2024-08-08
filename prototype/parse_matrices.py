@@ -16,10 +16,10 @@ def parse_matrix(m_strings, parsing_params):
         matrix.append(matrix_row)
     return Matrix(matrix)
 
-def check_matrix_equivalence(m0, m1):
+def check_matrix_equivalence(m0, m1) -> bool:
     r0 = m0.rank()
     r1 = m1.rank()
-    r = m0.row_join(m1).rank()
+    r = m0.col_join(m1).rank()
     return (r0 == r1) and (r0 == r)
 
 if __name__ == "__main__":

@@ -73,35 +73,43 @@ def hungarian(target, ans):
         for answer_force in target])
 
     row_ind, col_ind = scipy.optimize.linear_sum_assignment(cost_matrix)
-    return cost_matrix[row_ind, col_ind]
+    return cost_matrix[row_ind, col_ind], row_ind, col_ind
 
 def compare_labels(target, answer, context: SymbolContext) -> bool:
     # defer to karl's program
     # oversimplified implementation for now
+    #TODO: add useful info to symbol context and use it here
     return target == answer
 
+# 
 @dataclass
 class AnswerNode:
-    ...
-    label: str
-    metric: "... -> float" # distance metric
+    pos: vec2
 
-    def get_pos():
-        return ...
+    #TODO: this should calculate the position dynamically
+    def get_pos(this) -> vec2:
+        return this.pos
 
+# determines whether a distance marker is close enough to the model answer
 @dataclass
 class AnswerDistance:
-    start_node: AnswerNode
-    end_node: AnswerNode
+    start_node: int #AnswerNode
+    end_node: int #AnswerNode
     label: str
-    metric: "... -> float" # distance metric
+    # is the distance metric necessary?
+    #metric: "... -> float" # distance metric
 
+def dist_to_answer_dist(coord_dist) -> AnswerDistance:
+    return AnswerDistance(coord_dist.line.pos1, coord_dist.line.pos2, coord_dist.label)
+
+# what the user gets back
 @dataclass
 class AnswerFeedback:
     score: float
     surplus_forces: int
     surplus_moments: int
-    distance_feedback: ...
+    distance_feedback: str #TODO: a string is a bad way to represent this, fix
+    warnings: [vec2]
 
 @dataclass
 class AnswerDiagram:
@@ -121,50 +129,72 @@ class AnswerDiagram:
         total_cost = 0
 
         # match forces up
-        cost_trace1 = hungarian(self.forces, coord_repr.forces)
+        cost_trace1, row_ind1, col_ind1 = hungarian(self.forces, coord_repr.forces)
         cost = sum(cost_trace1 ** 4) ** 0.25
         total_cost += cost
 
         # moments: hungarian algorithm
-        cost_trace2 = hungarian(self.moments, coord_repr.moments)
+        cost_trace2, row_ind2, col_ind2 = hungarian(self.moments, coord_repr.moments)
+        #TODO: perhaps this should be changed to 'max' instead
         cost = sum(cost_trace2 ** 4) ** 0.25
         total_cost += cost
+
+        # danger sign (forces only rn)
+        warnings = []
+        if len(cost_trace1) > 0:
+            worst_error_index = np.argmax(cost_trace1)
+            actual_index = row_ind1[worst_error_index]
+            warnings.append(coord_repr.forces[actual_index].pos + coord_repr.forces[actual_index].direction / 2)
+
+        # distances
+        distances_valid = "distances correct" if self.check_distances(coord_repr) else "distances incorrect"
 
         return AnswerFeedback(
             score = total_cost - self.tolerance,
             surplus_forces =  len(coord_repr.forces) - len(self.forces),
             surplus_moments = len(coord_repr.moments) - len(self.moments),
-            distance_feedback = "not implemented yet"
+            distance_feedback = distances_valid,
+            warnings = warnings
         )
-
-        """return total_cost - self.tolerance, f"{(list(cost_trace1), len(self.forces), len(coord_repr.forces))} <br>\
-              {list(cost_trace2)} {len(self.moments)} {len(coord_repr.moments)}"""
     
-    def check_distances(self, coord_repr) -> bool:
-        # skeleton
-        m0_strings = [
-            ["-1","1","0","0","2L"],
-            ["0","-1","1","0","L"],
-            ["0","0","-1","1","2L"],
-            ["1","0","0","0","0"]
-        ]
-        model_strings = [
-            ["1","0","0","0","0"],
-            ["0","1","0","0","2L"],
-            ["0","0","1","0","3L"],
-            ["0","0","0","1","5L"]
-        ]
+    # provides the answer matrix (used for student's matrix too)
+    def build_matrix(self, distances):
         params = {
             "strict_syntax": False,
             "elementary_functions": True,
         }
         parsing_params = expression_utilities.create_sympy_parsing_params(params)
-        m0 = parse_matrices.parse_matrix(m0_strings, parsing_params)
-        m1 = parse_matrices.parse_matrix(model_strings, parsing_params)
-        print(m0)
-        print(m1)
-        print(parse_matrices.check_matrix_equivalence(m0, m1))
+        rows = []
+        for distance_marker in distances:
+            row = ["0"] * (len(self.nodes) + 1)
+            neg, pos = sorted((distance_marker.start_node, distance_marker.end_node))
+            row[neg] = "-1"
+            row[pos] = "1"
+            row[-1] = distance_marker.label
+            rows.append(row)
+        return parse_matrices.parse_matrix(rows, parsing_params)
+    
+    def check_distances(self, coord_repr) -> bool:
+        answer_matrix = self.build_matrix(self.distances)
+        matched_nodes = self.pair_up_distance_nodes(coord_repr.distances)
+        user_matrix = self.build_matrix(matched_nodes)
+        valid = parse_matrices.check_matrix_equivalence(user_matrix, answer_matrix)
+        return valid
 
-    def determine_node_locations() -> [vec2]:
-        pass
+    # take a list of distance markers and convert them to AnswerDistance
+    #TODO: ensure the start and end nodes are unique
+    def pair_up_distance_nodes(self, distances) -> [AnswerDistance]:
+        answer = []
+        for distance_marker in distances:
+            #start = self.nodes[distance_marker.start_node].get_pos()
+            #end = self.nodes[distance_marker.end_node].get_pos()
+            start = distance_marker.line.pos1
+            end = distance_marker.line.pos2
+            # find closest nodes
+            # ans_start = min(self.nodes, key=lambda node: norm(node.get_pos() - start))
+            # ans_end   = min(self.nodes, key=lambda node: norm(node.get_pos() - end))
+            ans_start = np.argmin([norm(node.get_pos() - start) for node in self.nodes])
+            ans_end = np.argmin([norm(node.get_pos() - end) for node in self.nodes])
+            answer.append(AnswerDistance(ans_start, ans_end, distance_marker.label))
+        return answer
 

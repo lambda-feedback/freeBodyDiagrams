@@ -39,8 +39,21 @@ eg3 = CoordRepr(
 )
 
 answer3 = AnswerDiagram(
+    # hard-coded values for now
     nodes = [
-        #tbc
+        AnswerNode(
+            pos = vec2(202, 283),
+        ),
+        AnswerNode(
+            pos = vec2(415, 283),
+        ),
+        AnswerNode(
+            pos = vec2(627, 283),
+        ),
+    ],
+    distances = [
+        AnswerDistance(0, 1, "L/2"),
+        AnswerDistance(0, 2, "L"),
     ],
     forces = [
         AnswerForce(
@@ -70,9 +83,11 @@ answer3 = AnswerDiagram(
     ],
     moments = [AnswerMoment(vec2(415, 283), False, "X", metric = moment_metric())],
 
-    distances = [],
     tolerance = 15,
 
+    # not used yet, but the idea is that it provides information about
+    # what symbols are part of the questions and which the student made up
+    # TODO: implement this
     context = ...
 )
 

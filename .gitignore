@@ -130,3 +130,6 @@ dmypy.json
 
 # VSCode configuration
 .vscode
+
+# stupid file
+test.svg
