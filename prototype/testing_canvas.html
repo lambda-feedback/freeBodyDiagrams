@@ -161,8 +161,7 @@
             currentArrows.forEach(arrow => drawArrow(arrow));
             warnings.forEach(warning => { 
                 // draw the image "warning.png" at the position (warning.x, warning.y) with size 50x50
-                context.drawImage(warningImage, 100, 100, 50, 50);
-                console.log("hii");
+                context.drawImage(warningImage, warning.x, warning.y, 50, 50);
             });
             if (isPreview && drawing) {
                 drawArrow({ startX, startY, endX, endY, type: arrowTypeSelect.value, text: textInput.value }, true);

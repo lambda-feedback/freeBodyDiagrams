@@ -16,10 +16,9 @@ def judge(diagram):
 surplus forces: {feedback.surplus_forces} <br>
 surplus moments: {feedback.surplus_moments} <br>
 distances: """ + feedback.distance_feedback,
-        'warnings': [{'x': 100, 'y': 100}]
+        'warnings': [{'x': warning[0], 'y': warning[1]} for warning in feedback.warnings]
     })
             
-
 
 @app.route('/upload', methods=['POST'])
 def judge_diagram():
