@@ -70,10 +70,10 @@ def hungarian(target, ans):
     # not limited to forces
     cost_matrix = np.array([
         [answer_force.dist(response_force) for response_force in ans]
-        for answer_force in target])
+        for answer_force in target]).T
 
     row_ind, col_ind = scipy.optimize.linear_sum_assignment(cost_matrix)
-    return cost_matrix[row_ind, col_ind], row_ind, col_ind
+    return cost_matrix, row_ind, col_ind
 
 def compare_labels(target, answer, context: SymbolContext) -> bool:
     # defer to karl's program
@@ -130,30 +130,30 @@ class AnswerDiagram:
 
         # match forces up
         cost_trace1, row_ind1, col_ind1 = hungarian(self.forces, coord_repr.forces)
-        cost = sum(cost_trace1 ** 4) ** 0.25
+        cost = sum(cost_trace1[row_ind1, col_ind1] ** 4) ** 0.25
         total_cost += cost
 
         # moments: hungarian algorithm
         cost_trace2, row_ind2, col_ind2 = hungarian(self.moments, coord_repr.moments)
         #TODO: perhaps this should be changed to 'max' instead
-        cost = sum(cost_trace2 ** 4) ** 0.25
+        cost = sum(cost_trace2[row_ind2, col_ind2] ** 4) ** 0.25
         total_cost += cost
 
         # danger sign (forces only rn)
         warnings = []
-        if len(cost_trace1) > 0:
-            worst_error_index = np.argmax(cost_trace1)
-            actual_index = row_ind1[worst_error_index]
-            warnings.append(coord_repr.forces[actual_index].pos + coord_repr.forces[actual_index].direction / 2)
-
+        if cost_trace1.shape[1] > 0 and len(coord_repr.forces)-len(self.forces) >= 0:
+            for i in range(len(coord_repr.forces)):
+                if i not in col_ind1 or min(cost_trace1[i]) > 15:
+                    warnings.append(coord_repr.forces[i].pos + coord_repr.forces[i].direction / 2 - vec2(25, 25))
+            
         # distances
-        distances_valid = "distances correct" if self.check_distances(coord_repr) else "distances incorrect"
+        distances_valid = self.check_distances(coord_repr)
 
         return AnswerFeedback(
-            score = total_cost - self.tolerance,
+            score = total_cost - self.tolerance + (0 if distances_valid else 15),
             surplus_forces =  len(coord_repr.forces) - len(self.forces),
             surplus_moments = len(coord_repr.moments) - len(self.moments),
-            distance_feedback = distances_valid,
+            distance_feedback = "distances correct" if distances_valid else "distances incorrect",
             warnings = warnings
         )
     

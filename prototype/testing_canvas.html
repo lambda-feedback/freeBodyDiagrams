@@ -259,6 +259,7 @@
                 //alert('Feedback: ' + data.feedback);
                 feedback.innerHTML = data.feedback + ` (${count})`;
                 warnings = data.warnings;
+                redrawCanvas(drawing);
                 count++;
             })
             .catch((error) => {
