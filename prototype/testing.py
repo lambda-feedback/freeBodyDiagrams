@@ -1,3 +1,4 @@
+# NOTE: this file is not really used much anymore, but kept for reference and for eg3
 from judge import *
 
 # test on example 3

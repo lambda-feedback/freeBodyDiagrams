@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Drawing with Arrows</title>
+    <title>Arrow Drawing</title>
     <style>
         body {
             display: flex;
@@ -49,9 +49,9 @@
     <div id="toolbar">
         <input type="text" id="textInput" class="input-box" placeholder="Enter text">
         <select id="arrowType" class="dropdown">
-            <option value="oneWay">One Way Arrow</option>
-            <option value="twoWay">Two Way Arrow</option>
-            <option value="curved">Curved Arrow</option>
+            <option value="force">Force</option>
+            <option value="distance">Distance Marker</option>
+            <option value="moments">Moment</option>
         </select>
         <button class="button" id="saveButton">Save as Text</button>
         <button class="button" id="sendButton" onclick="sendDiagram()">Send Diagram</button>
@@ -87,11 +87,13 @@
         }
 
         function stopDrawing(event) {
+            console.log("stop start");
             if (!drawing) return;
             drawing = false;
             const arrow = { startX, startY, endX, endY, type: arrowTypeSelect.value, text: textInput.value };
             currentArrows.push(arrow);
             redrawCanvas();
+            console.log("stop end");
         }
 
         function getMousePos(event) {
@@ -106,7 +108,7 @@
             const angle = Math.atan2(dy, dx);
 
             context.beginPath();
-            if (type === 'curved') {
+            if (type === 'moment') {
                 const cpX = (startX + endX) / 2 + (endY - startY) / 2;
                 const cpY = (startY + endY) / 2 - (endX - startX) / 2;
                 context.moveTo(startX, startY);
@@ -118,7 +120,7 @@
                 context.lineTo(endX, endY);
                 context.stroke();
                 drawArrowHead(endX, endY, angle);
-                if (type === 'twoWay') drawArrowHead(startX, startY, angle + Math.PI);
+                if (type === 'distance') drawArrowHead(startX, startY, angle + Math.PI);
             }
             
             if (text && !isPreview) {
@@ -170,19 +172,38 @@
 
         function selectArrow(event) {
             const [x, y] = getMousePos(event);
-            selectedArrow = currentArrows.find(arrow => {
+            // selectedArrow = currentArrows.find(arrow => {
+            //     const distanceToStart = Math.hypot(arrow.startX - x, arrow.startY - y);
+            //     const distanceToEnd = Math.hypot(arrow.endX - x, arrow.endY - y);
+            //     if (distanceToStart < 10) {
+            //         draggingStartPoint = true;
+            //         return true;
+            //     }
+            //     if (distanceToEnd < 10) {
+            //         draggingStartPoint = false;
+            //         return true;
+            //     }
+            //     return false;
+            // });
+            // same as above, but find closest arrow:
+            selectedArrow = null;
+            let bestDistance = 10;
+            draggingStartPoint = true;
+            for (let arrow of currentArrows) {
                 const distanceToStart = Math.hypot(arrow.startX - x, arrow.startY - y);
                 const distanceToEnd = Math.hypot(arrow.endX - x, arrow.endY - y);
-                if (distanceToStart < 10) {
+                if (distanceToStart < bestDistance) {
+                    bestDistance = distanceToStart;
+                    selectedArrow = arrow;
                     draggingStartPoint = true;
-                    return true;
                 }
-                if (distanceToEnd < 10) {
+                if (distanceToEnd < bestDistance) {
+                    bestDistance = distanceToEnd;
+                    selectedArrow = arrow;
                     draggingStartPoint = false;
-                    return true;
                 }
-                return false;
-            });
+            }
+
             if (selectedArrow) {
                 moving = true;
                 [startX, startY] = [x, y];
@@ -217,13 +238,13 @@
                 };
 
                 switch (arrow.type) {
-                    case 'oneWay':
+                    case 'force':
                         categorizedArrows.forces.push(arrowData);
                         break;
-                    case 'twoWay':
+                    case 'distance':
                         categorizedArrows.distance_markers.push(arrowData);
                         break;
-                    case 'curved':
+                    case 'moment':
                         categorizedArrows.moments.push(arrowData);
                         break;
                 }
