@@ -117,6 +117,7 @@ class AnswerDiagram:
     moments: [AnswerMoment]
 
     # not used right now but in the future?
+    # idea: sometimes the user can invent symbols and sometimes the answer needs to use specific symbols
     context: SymbolContext # symbols we can use, etc.
 
     # figure out where answer nodes are and 

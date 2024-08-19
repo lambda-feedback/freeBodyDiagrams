@@ -28,5 +28,31 @@ This is one big loose end, so I will lay out what I have looked at so far:
  - There might be an open-source model out there already that lets you do all this, but I haven't found it.
  - Most of the difficulty comes from **creating and labelling training data**.
  - My plan was to **create a website that displays arrows (etc), and then asks the users to draw over them, and then creates training data from that**. I have started work on that, but there is an alternative (see next point).
- - There is a website, **roboflow**, which claims to provide tools to help label the data and build/train the model, even going so far as labelling it automatically. You may need to **look into the liscence**, as it is not for commercial use.
+ - There is a website, **roboflow**, which claims to provide tools to help label the data and build/train the model, even going so far as labelling it automatically. You may need to **look into the licence**, as it is not for commercial use.
  - potentially useful: [opencv.org](https://opencv.org/)
+
+## Guide to using it
+- Install prerequesites by just doing `pip install -r requirements.txt`
+- Run `python lil_server_for_testing_purposes` to set up the server
+- Open up the file `testing_canvas.html` in your browser
+- Draw/move arrows using left mouse button and delete using right mouse button
+- You should now get live feedback
+- The target answer is stored in questions.py
+
+## Guide to adding new feature (distributed loads):
+- Let us suppose, for simplicity, our distributed load is constant
+- Add a new type of arrow to `testing_canvas.html`, along with code to render and draw it
+- Add a `CoordDistributedLoad` class to `representation.py` to store information about what the user drew (using coordinates), such as
+   - Start point
+   - End point
+   - Load label
+   - Load direction
+- Add an `AnswerDistributedLoad` class to `judge.py` to store the model answer
+- Store some `CoordDistributedLoad`s in `CoordRepr` and  `AnswerDistributedLoad`s in `AnswerDiagram`
+- Add a `distributed_load_metric` to `judge.py`, perhaps with some customisable parameters
+- Modify `AnswerDiagram.check_diagram()`so that it compares the distributed loads the user drew with the model answer
+   - You can use `hungarian(target, ans)` where target is a list of `AnswerDistributedLoad` and ans is a list of `CoordDistributedLoad`
+   - Note that everything in target must have a `dist(x)` function (that uses the metric to find the 'distance' from x)
+   - `hungarian` will return a tuple: cost_matrix, row_ind, col_ind
+      - `cost_matrix` is just the matrix of costs
+      - `zip(row_ind, col_ind)` gives you a list of matchings
