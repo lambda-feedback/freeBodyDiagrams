@@ -65,7 +65,8 @@ def force_metric(bidirectional=False, dir_sensitivity=100, pos_matrix=np.array([
         error_vec = target.get_pos() - ans.pos
         cost_quadratic_form = np.sqrt(np.dot(error_vec, pos_matrix @ error_vec))
         label_cost = 0
-        if target.label != ans.label:
+        #TODO: implement context
+        if not compare_labels(target.label, ans.label, context=None):
             label_cost = 20
         return label_cost + cost_quadratic_form + dir_sensitivity * abs(1-dot)
     return fn
