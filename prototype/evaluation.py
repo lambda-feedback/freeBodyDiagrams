@@ -244,9 +244,9 @@ class AnswerDiagram:
                     ))
 
         # for debugging
-        warnings.append(Warning(self.nodes[0].get_pos() - vec2(0, 200), "node 0"))
-        warnings.append(Warning(self.nodes[1].get_pos() - vec2(0, 200), "node 1"))
-        warnings.append(Warning(self.nodes[2].get_pos() - vec2(0, 200), "node 2"))
+        #warnings.append(Warning(self.nodes[0].get_pos() - vec2(0, 200), "node 0"))
+        #warnings.append(Warning(self.nodes[1].get_pos() - vec2(0, 200), "node 1"))
+        #warnings.append(Warning(self.nodes[2].get_pos() - vec2(0, 200), "node 2"))
             
         # distances
         distances_valid = self.check_distances(coord_repr)
