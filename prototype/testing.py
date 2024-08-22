@@ -44,16 +44,19 @@ answer3 = AnswerDiagram(
     nodes = [
         AnswerNode(
             start_pos = vec2(202, 283),
-            things_to_average = [(vec2, vec2(202, 283), DIAGONAL(1, 1))]
+            things_to_average = [(vec2, vec2(202, 283), DIAGONAL(1, 1))],
+            metric = None,
         ),
         AnswerNode(
             start_pos = vec2(415, 283),
             # keep horizontal component of force and constant vertical component
-            things_to_average = [(AnswerForce, 3, DIAGONAL(1, 0)), (vec2, vec2(0, 283), DIAGONAL(0, 1))]
+            things_to_average = [(AnswerForce, 3, DIAGONAL(1, 0)), (vec2, vec2(0, 283), DIAGONAL(0, 1))],
+            metric = None,
         ),
         AnswerNode(
             start_pos = vec2(627, 283),
-            things_to_average = [(vec2, vec2(627, 283), DIAGONAL(1, 1))]
+            things_to_average = [(vec2, vec2(627, 283), DIAGONAL(1, 1))],
+            metric = None,
         ),
     ],
     distances = [
