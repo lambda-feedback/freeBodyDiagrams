@@ -36,7 +36,6 @@ class AnswerForce:
     parent: "AnswerDiagram" = None
 
     def get_pos(self):
-        print(f"got force pos: {self.pos}")
         return self.parent.nodes[self.pos].get_pos()
 
     def dist(self, force):
@@ -212,12 +211,10 @@ class AnswerDiagram:
         # we need to know the rought force matchings before we can figure out the node positions
         # I don't know of a better way to do this
         for i in range(3):
-            print(f"ITER {i}")
             cost_trace1, row_ind1, col_ind1 = hungarian(self.forces, coord_repr.forces)
 
             # save the pairings (TODO: is this even correct?)
             self._force_matchings = {row_ind1[i]: col_ind1[i] for i in range(len(row_ind1))}
-            print(self._force_matchings)
 
             # moments: hungarian algorithm
             cost_trace2, row_ind2, col_ind2 = hungarian(self.moments, coord_repr.moments)
