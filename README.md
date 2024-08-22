@@ -12,13 +12,13 @@ This website requires you to run the Flask server, called lil_server_for_testing
     - There are details about how many moments are expected and how many forces are expected.
     - The score is visible.
     - When an answer label and anoth label do not match up, there is an extra fixed distance added to the metric.
-    - There are **warnings, that tell the user where the biggest problem is**. The information from the hungarian algorithm is enough for you to figure out what force, etc is causing the problem and relay it to the user.
- - I will now explain my plan to **handle distances**. Only some of this is implemented.
-    - I am currently restricting myself to verifying distance markers that all lie on a line. The plan is as follows:
+    - There are warnings, that tell the user where the biggest problems are. The information from the hungarian algorithm is enough for you to figure out what force, etc is causing the problem and relay it to the user.
+ - I will now explain how it handles distances.
+    - I am currently restricting myself to verifying distance markers that all lie on a line.
         - **Identify the key points on the diagram that the distance markers need to reference and match up with answer**. These are for example the end-points and the position where a force is applied.
         - Encode each of these nodes as a position on a line.
         - This means a distance marker between two nodes, A and B, of length 2m, is encoded as B - A = 2.
-        - All of these equations from all the distance markers can be **put into matrix form** and we look at the RRE form and compare it with the answer.
+        - All of these equations from all the distance markers can be put into matrix form and we look at the RRE form and compare it with the answer.
 
 ## Image recognition stuff
 The idea is that a user can draw, by hand, a diagram, and then this is converted into our internal representation. \
@@ -36,7 +36,7 @@ This is one big loose end, so I will lay out what I have looked at so far:
 - Run `python lil_server_for_testing_purposes` to set up the server
 - Open up the file `testing_canvas.html` in your browser
 - Draw/move arrows using left mouse button and delete using right mouse button
-- You should now get live feedback
+- You should now get live feedback every second
 - The target answer is stored in questions.py
 
 ## Guide to adding new feature (distributed loads):

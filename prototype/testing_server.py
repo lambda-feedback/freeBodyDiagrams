@@ -1,8 +1,10 @@
+# Run this file to start the testing server.
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import numpy as np
-from judge import *
+from evaluation import *
 import testing
 
 app = Flask(__name__)
@@ -16,7 +18,7 @@ def judge(diagram):
 surplus forces: {feedback.surplus_forces} <br>
 surplus moments: {feedback.surplus_moments} <br>
 distances: """ + feedback.distance_feedback,
-        'warnings': [{'x': warning[0], 'y': warning[1]} for warning in feedback.warnings]
+        'warnings': [{'x': warning.pos[0], 'y': warning.pos[1], 'message': warning.message} for warning in feedback.warnings]
     })
             
 

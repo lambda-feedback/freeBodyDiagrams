@@ -15,7 +15,7 @@ dwg.save()
 norm = np.linalg.norm
 
 def vec2(x, y):
-    return np.array((x,y))
+    return np.array((x,y), dtype=float)
 
 def vec_to_tuple(vec):
     return tuple(int(v) for v in vec)

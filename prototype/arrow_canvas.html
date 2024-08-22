@@ -1,3 +1,7 @@
+<!--
+This file lets you draw forces etc on a canvas and then sends the data to the server in JSON form.
+
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +21,7 @@
             position: relative;
             width: 800px;
             height: 600px;
-            background: url('questions/skeleton1.svg') no-repeat center center; /* Replace with your image URL */
+            background: url('questions/skeleton1.svg') no-repeat center center;
             background-size: cover;
         }
         canvas {
@@ -51,7 +55,7 @@
         <select id="arrowType" class="dropdown">
             <option value="force">Force</option>
             <option value="distance">Distance Marker</option>
-            <option value="moments">Moment</option>
+            <option value="moment">Moment</option>
         </select>
         <button class="button" id="saveButton">Save as Text</button>
         <button class="button" id="sendButton" onclick="sendDiagram()">Send Diagram</button>
@@ -163,7 +167,9 @@
             currentArrows.forEach(arrow => drawArrow(arrow));
             warnings.forEach(warning => { 
                 // draw the image "warning.png" at the position (warning.x, warning.y) with size 50x50
-                context.drawImage(warningImage, warning.x, warning.y, 50, 50);
+                context.drawImage(warningImage, warning.x - 25, warning.y - 25, 50, 50);
+                // text for the message
+                context.fillText(warning.message, warning.x + 25, warning.y);
             });
             if (isPreview && drawing) {
                 drawArrow({ startX, startY, endX, endY, type: arrowTypeSelect.value, text: textInput.value }, true);
@@ -172,20 +178,6 @@
 
         function selectArrow(event) {
             const [x, y] = getMousePos(event);
-            // selectedArrow = currentArrows.find(arrow => {
-            //     const distanceToStart = Math.hypot(arrow.startX - x, arrow.startY - y);
-            //     const distanceToEnd = Math.hypot(arrow.endX - x, arrow.endY - y);
-            //     if (distanceToStart < 10) {
-            //         draggingStartPoint = true;
-            //         return true;
-            //     }
-            //     if (distanceToEnd < 10) {
-            //         draggingStartPoint = false;
-            //         return true;
-            //     }
-            //     return false;
-            // });
-            // same as above, but find closest arrow:
             selectedArrow = null;
             let bestDistance = 10;
             draggingStartPoint = true;
@@ -277,7 +269,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                //alert('Feedback: ' + data.feedback);
                 feedback.innerHTML = data.feedback + ` (${count})`;
                 warnings = data.warnings;
                 redrawCanvas(drawing);
@@ -288,8 +279,7 @@
             });
         }
 
-        setInterval(sendDiagram, 1000);
-
+        setInterval(sendDiagram, 400);
 
         document.getElementById('saveButton').addEventListener('click', saveCanvasAsJSON);
         canvas.addEventListener('mousedown', event => {

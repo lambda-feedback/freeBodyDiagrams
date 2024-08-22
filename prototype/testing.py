@@ -1,5 +1,5 @@
 # NOTE: this file is not really used much anymore, but kept for reference and for eg3
-from judge import *
+from evaluation import *
 
 # test on example 3
 eg3 = CoordRepr(
@@ -43,13 +43,17 @@ answer3 = AnswerDiagram(
     # hard-coded values for now
     nodes = [
         AnswerNode(
-            pos = vec2(202, 283),
+            start_pos = vec2(202, 283),
+            things_to_average = [(vec2, vec2(202, 283), DIAGONAL(1, 1))]
         ),
         AnswerNode(
-            pos = vec2(415, 283),
+            start_pos = vec2(415, 283),
+            # keep horizontal component of force and constant vertical component
+            things_to_average = [(AnswerForce, 3, DIAGONAL(1, 0)), (vec2, vec2(0, 283), DIAGONAL(0, 1))]
         ),
         AnswerNode(
-            pos = vec2(627, 283),
+            start_pos = vec2(627, 283),
+            things_to_average = [(vec2, vec2(627, 283), DIAGONAL(1, 1))]
         ),
     ],
     distances = [
@@ -58,31 +62,31 @@ answer3 = AnswerDiagram(
     ],
     forces = [
         AnswerForce(
-            pos = vec2(202, 283),
+            pos = 0,
             direction = DIRECTION(180),
             label = "A_H",
             metric = force_metric(bidirectional=True)
         ),
         AnswerForce(
-            pos = vec2(202, 283),
+            pos = 0,
             direction = DIRECTION(90),
             label = "A_V",
             metric = force_metric(bidirectional=True)
         ),
         AnswerForce(
-            pos = vec2(627, 283),
+            pos = 2,
             direction = DIRECTION(-90),
             label = "F_1",
             metric = force_metric()
         ),
         AnswerForce(
-            pos = vec2(415, 283),
+            pos = 1,
             direction = DIRECTION(90),
-            label = "B_v",
+            label = "B_V",
             metric = force_metric()
         ),
     ],
-    moments = [AnswerMoment(vec2(415, 283), False, "X", metric = moment_metric())],
+    moments = [AnswerMoment(vec2(202, 283), False, "X", metric = moment_metric())],
 
     tolerance = 15,
 
@@ -92,15 +96,15 @@ answer3 = AnswerDiagram(
     context = ...
 )
 
-skeleton1 = CoordRepr(
-    lines = [CoordLine(vec2(202, 283), vec2(627, 283))],
-    forces=[],
-    moments=[],
-    distances=[]
-)
-dwg = svgwrite.Drawing('questions/skeleton1.svg')
-skeleton1.draw(dwg)
-dwg.save()
+# skeleton1 = CoordRepr(
+#     lines = [CoordLine(vec2(202, 283), vec2(627, 283))],
+#     forces=[],
+#     moments=[],
+#     distances=[]
+# )
+# dwg = svgwrite.Drawing('questions/skeleton1.svg')
+# skeleton1.draw(dwg)
+# dwg.save()
 
 # dwg = svgwrite.Drawing('test.svg')
 # eg3.draw(dwg)
