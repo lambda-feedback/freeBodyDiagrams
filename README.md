@@ -1,9 +1,8 @@
 # Evalation function for free body diagrams
 (please see template_README.md for original README message) \
-I will label any **loose ends** in bold, which you are free to remove after implementing or dismissing.
 
 ## Quick explanation of free body diagrams
-A FBD illustrates the forces acting on a single object or system, isolated from its surroundings. The forces and moments acting on the object are all drawn. It is important that the distances are labelled correctly. It is also important that 
+A FBD illustrates the forces acting on a single object or system, isolated from its surroundings. The forces and moments acting on the object are all drawn. It is important that the distances are labelled correctly.
 
 ## High-level overview of features
 - There is a website that the user can use to draw (arrows only) free body diagrams over a background image (the beam in this case)
@@ -17,7 +16,7 @@ A FBD illustrates the forces acting on a single object or system, isolated from 
 - There are representations of user-drawn diagrams and model answers
 - There is functionality to display user-drawn diagrams as an svg, but this is not maintained and probably missing a lot of features
 - There is a website that allows the user to draw over a background image (like using a pen) and will save their answer as a png
-- Karl has provided two files involved with finding the RRE form of matrices (but with symbolic entries), and these are used in checking distances
+- Karl has provided two files involved with comparing the RRE form of matrices (but with symbolic entries), and these are used in checking distances
 
 ## Explanation of evaluation function algorithm
 The class `AnswerDiagram` contains the following:
@@ -25,6 +24,7 @@ The class `AnswerDiagram` contains the following:
 - a list of `AnswerMoment`
 - a list of `AnswerDistance`
 - tolerance, which is subtracted from the total cost at the end
+
 First, the Hungarian algorithm is used to match up the target forces with the user's forces. The weights are determined by customisable metrics. This is repeated for moments. \
 Next, we recalculate the positions of the `AnswerNode`s, to which the forces' positions are tied. This is done by doing a weighted average of fixed vectors and forces, weighted by matrices for further flexibility. Then we do the hungarian algorithm again, as the nodes have shifted. This is done once more for good luck. \
 We use the matchings to calculate the score, combining individual scores with the l4 norm (perhaps max is better idk). Then we move on to distance markers. \
@@ -35,18 +35,24 @@ Finally, we add a punishment to the score for excess/too few forces or moments.
 ## How to use `question_maker.py`
 to be written when it is finished
 
+## Purpose of some files
+- canvas-drawing.json just serves as an example and can be deleted
+- drawing_canvas.html lets the user draw over a background image in a way that mimics a pen
+- test.svg is generated as a test and can be ignored or deleted
+- questions/skeleton1.svg is used as a background image
+
 ## Known bugs, loose ends and possible features
 - Warnings signs do not always show up when necessary (they are currently only implemented for forces).
 - Warnings signs could show better messages, perhaps customisable.
 - BUG: Currently nodes have flexible positions, however there is nothing ensuring that nodes are in the right relative positions. It is entirely possible that the user swaps the positions of two nodes and still gets their diagram marked as right.
 - BUG: Nodes can be located off the edge of the beam.
-- POSSIBLE BUG: Each node's position is a weighted average of forces and positions, however if there are too few forces drawn by the user there is a possibility that it may not be able to find a particular force and thus crash the server.
 - Currently the weighted average to calculate each node's position does not take into account moments.
 - BUG: currently distance markers are checked by determining the nearest node to each endpoint. This is a problem as we can have very "slanted" or inaccurate distance markers still being marked as correct. Perhaps calculate the vectors from the endpoints to their respective nodes and compare them?
 - The `question_maker.py` file is currently not finished. *
 - The question maker does not support shapes other than straight lines.
 - The handling of moments needs some tweaking. Currently moments are stored as arrows, but they should probably be stored as a singular point, with an associated label, as that is how they are used. Also they could be tied to nodes.
-
+- BUG: If a force is facing into the beam instead of away from it, it is currently not counted as correct, but it should be.
+- TODO: make better use of customisable metrics (you can specify a matrix but it is always the same right now)
 
 ## Image recognition stuff
 The idea is that a user can draw, by hand, a diagram, and then this is converted into our internal representation. \

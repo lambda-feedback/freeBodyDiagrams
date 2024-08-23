@@ -1,4 +1,5 @@
 # Run this file to start the testing server.
+# It will not serve the actual webpage, open that yourself.
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -8,7 +9,7 @@ from evaluation import *
 import testing
 
 app = Flask(__name__)
-CORS(app)
+CORS(app) # allow cross-origin requests
 
 def judge(diagram):
     # Process the diagram and return feedback

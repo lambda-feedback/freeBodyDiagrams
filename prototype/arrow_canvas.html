@@ -1,6 +1,6 @@
 <!--
 This file lets you draw forces etc on a canvas and then sends the data to the server in JSON form.
-
+The server doesn't serve you this file, you need to open it and then start the server.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -58,6 +58,8 @@ This file lets you draw forces etc on a canvas and then sends the data to the se
             <option value="moment">Moment</option>
         </select>
         <button class="button" id="saveButton">Save as Text</button>
+        <!-- This is a manual way to send a request to the server for feedback.
+         Feedback requests occur at constant intervals, but that can be disabled. -->
         <button class="button" id="sendButton" onclick="sendDiagram()">Send Diagram</button>
     </div>
     <div id="canvasContainer">
@@ -91,13 +93,11 @@ This file lets you draw forces etc on a canvas and then sends the data to the se
         }
 
         function stopDrawing(event) {
-            console.log("stop start");
             if (!drawing) return;
             drawing = false;
             const arrow = { startX, startY, endX, endY, type: arrowTypeSelect.value, text: textInput.value };
             currentArrows.push(arrow);
             redrawCanvas();
-            console.log("stop end");
         }
 
         function getMousePos(event) {
@@ -105,6 +105,7 @@ This file lets you draw forces etc on a canvas and then sends the data to the se
             return [event.clientX - rect.left, event.clientY - rect.top];
         }
 
+        // draw forces, distance markers and moments
         function drawArrow(arrow, isPreview = false) {
             const { startX, startY, endX, endY, type, text } = arrow;
             const dx = endX - startX;
@@ -113,6 +114,8 @@ This file lets you draw forces etc on a canvas and then sends the data to the se
 
             context.beginPath();
             if (type === 'moment') {
+                // TODO: change this to use only one point, as we don't need a line for moments,
+                // just a position, (direction) and label
                 const cpX = (startX + endX) / 2 + (endY - startY) / 2;
                 const cpY = (startY + endY) / 2 - (endX - startX) / 2;
                 context.moveTo(startX, startY);
@@ -217,7 +220,7 @@ This file lets you draw forces etc on a canvas and then sends the data to the se
                 distance_markers: [],
                 forces: [],
                 moments: [],
-                question_name: "q1"
+                question_name: "q1" // TODO: allow this to be changed
             };
 
             currentArrows.forEach(arrow => {
@@ -279,6 +282,7 @@ This file lets you draw forces etc on a canvas and then sends the data to the se
             });
         }
 
+        // sendDiagram() will be called every 400ms
         setInterval(sendDiagram, 400);
 
         document.getElementById('saveButton').addEventListener('click', saveCanvasAsJSON);

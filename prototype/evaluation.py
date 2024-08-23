@@ -74,7 +74,6 @@ def force_metric(bidirectional=False, dir_sensitivity=100, pos_matrix=np.array([
 def moment_metric():
     def fn(target, ans):
         dist = norm(target.pos - ans.pos) * 0.15
-        # ... tbc
         return dist
     return fn
 
@@ -126,24 +125,20 @@ class AnswerNode:
     def get_pos(self) -> vec2:
         if self._parent._first_iter:
             return self.start_pos
-        total_weight = DIAGONAL(0, 0)
-        total = vec2(0, 0)
+        
+        # ensure it is always invertible
+        total_weight = DIAGONAL(0.001, 0.001)
+        total = 0.001 * self.start_pos
+
         for source, value, weight in self.things_to_average:
             if source == AnswerForce:
-                #total += weight @ self._context.forces[value].pos
-                try:
+                if value in self._parent._force_matchings:
                     total += weight @ self._context.forces[self._parent._force_matchings[value]].pos
                     total_weight += weight
-                except Exception as e:
-                    print("INFO")
-                    print(len(self._context.forces))
-                    print(self._parent._force_matchings)
-                    print(value)
-                    raise e
-                
             elif source == vec2:
                 total += weight @ value
                 total_weight += weight
+        
         inv_weight = np.linalg.inv(total_weight)
         ans = inv_weight @ total
         return ans

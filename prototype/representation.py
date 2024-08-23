@@ -1,8 +1,11 @@
+# This file contains the representation of what the user drew
+# as well as a couple of utility functions to deal with JSON sent from the webpage
+# and some experimentation with svgwrite
+
 import svgwrite
 from dataclasses import dataclass
 import numpy as np
 import json
-
 
 """
 dwg.add(dwg.line((0, 0), (100, 0), stroke=svgwrite.rgb(10, 10, 16, '%')))
@@ -104,44 +107,4 @@ dwg.add(dwg.line((0, 0), (0, 100), stroke=svgwrite.rgb(10, 12, 16, '%')))
 dwg.add(dwg.text('Test', insert=(0, 0.2), fill='red'))
 
 dwg.save()
-"""
-
-"""
-# eg 1
-eg1 = CoordRepr(
-    lines = [CoordLine((20, 40), (224, 48))],
-    forces = [
-        CoordForce(
-            pos = (23,46),
-            direction = (-0.99, 0.05),
-            label = "A_H",
-        ),
-        CoordForce(
-            pos = (17,45),
-            direction = (0.05, 0.99),
-            label = "A_V",
-        ),
-        CoordForce(
-            pos = (125,41),
-            direction = (0.1, -0.99),
-            label = "F_1",
-        ),
-        CoordForce(
-            pos = (227,40),
-            direction = (0.1, 0.99),
-            label = "B_v",
-        ),
-    ],
-    moments = [],
-    distances = [
-        CoordDistance(
-            line = CoordLine((23, 50), (220, 61)),
-            label = "L"
-        ),
-        CoordDistance(
-            line = CoordLine((23, 30), (119, 31)),
-            label = "L/2"
-        ),
-    ]
-)
 """

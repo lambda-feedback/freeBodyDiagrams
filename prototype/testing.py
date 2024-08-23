@@ -3,37 +3,37 @@ from evaluation import *
 
 # test on example 3
 eg3 = CoordRepr(
-    lines = [CoordLine(vec2(202, 283), vec2(627, 283))],
+    lines = [CoordLine(vec2(200, 300), vec2(600, 300))],
     forces = [
         CoordForce(
-            pos = vec2(202, 283),
+            pos = vec2(200, 300),
             direction = DIRECTION(180),
             label = "A_H",
         ),
         CoordForce(
-            pos = vec2(202, 283),
+            pos = vec2(200, 300),
             direction = vec2(0.05, 0.99),
             label = "A_V",
         ),
         CoordForce(
-            pos = vec2(627, 283),
+            pos = vec2(600, 300),
             direction = DIRECTION(-90),
             label = "F_1",
         ),
         CoordForce(
-            pos = vec2(415, 283),
+            pos = vec2(400, 300),
             direction = DIRECTION(90),
             label = "B_v",
         ),
     ],
-    moments = [CoordMoment(vec2(415, 283), False, "X")],
+    moments = [CoordMoment(vec2(400, 300), False, "X")],
     distances = [
         CoordDistance(
-            line = CoordLine(vec2(202, 287), vec2(415, 287)),
+            line = CoordLine(vec2(200, 287), vec2(400, 287)),
             label = "L/2"
         ),
         CoordDistance(
-            line = CoordLine(vec2(415, 291), vec2(627, 291)),
+            line = CoordLine(vec2(400, 291), vec2(600, 291)),
             label = "L/2"
         ),
     ]
@@ -43,19 +43,19 @@ answer3 = AnswerDiagram(
     # hard-coded values for now
     nodes = [
         AnswerNode(
-            start_pos = vec2(202, 283),
-            things_to_average = [(vec2, vec2(202, 283), DIAGONAL(1, 1))],
+            start_pos = vec2(200, 300),
+            things_to_average = [(vec2, vec2(200, 300), DIAGONAL(1, 1))],
             metric = None,
         ),
         AnswerNode(
-            start_pos = vec2(415, 283),
+            start_pos = vec2(400, 300),
             # keep horizontal component of force and constant vertical component
-            things_to_average = [(AnswerForce, 3, DIAGONAL(1, 0)), (vec2, vec2(0, 283), DIAGONAL(0, 1))],
+            things_to_average = [(AnswerForce, 3, DIAGONAL(1, 0)), (vec2, vec2(0, 300), DIAGONAL(0, 1))],
             metric = None,
         ),
         AnswerNode(
-            start_pos = vec2(627, 283),
-            things_to_average = [(vec2, vec2(627, 283), DIAGONAL(1, 1))],
+            start_pos = vec2(600, 300),
+            things_to_average = [(vec2, vec2(600, 300), DIAGONAL(1, 1))],
             metric = None,
         ),
     ],
@@ -89,7 +89,7 @@ answer3 = AnswerDiagram(
             metric = force_metric()
         ),
     ],
-    moments = [AnswerMoment(vec2(202, 283), False, "X", metric = moment_metric())],
+    moments = [AnswerMoment(vec2(200, 300), False, "X", metric = moment_metric())],
 
     tolerance = 15,
 
@@ -99,8 +99,10 @@ answer3 = AnswerDiagram(
     context = ...
 )
 
+# create image for question
+# UNCOMMENT TO GENERATE NEW IMAGE
 # skeleton1 = CoordRepr(
-#     lines = [CoordLine(vec2(202, 283), vec2(627, 283))],
+#     lines = [CoordLine(vec2(200, 300), vec2(600, 300))],
 #     forces=[],
 #     moments=[],
 #     distances=[]
@@ -109,6 +111,8 @@ answer3 = AnswerDiagram(
 # skeleton1.draw(dwg)
 # dwg.save()
 
+
+# examples of functionality that exists
 # dwg = svgwrite.Drawing('test.svg')
 # eg3.draw(dwg)
 # dwg.save()
