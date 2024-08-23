@@ -73,7 +73,7 @@ def force_metric(bidirectional=False, dir_sensitivity=100, pos_matrix=np.array([
 
 def moment_metric():
     def fn(target, ans):
-        dist = norm(target.pos - ans.pos) * 0.01
+        dist = norm(target.pos - ans.pos) * 0.15
         # ... tbc
         return dist
     return fn
@@ -227,7 +227,7 @@ class AnswerDiagram:
 
         # TODO: penalty for nodes that stray too far from their ideal positions
 
-        # TODO: pentaly for distance markers that are in "crazy" positions
+        # TODO: penalty for distance markers that are in "crazy" positions
         # I don't know the right way to do this yet
         # you don't want to punish distance markers that are, for example, directly below the model answer, because it is still correct
         # but you do want to punish distance markers that are off to the side

@@ -2,23 +2,51 @@
 (please see template_README.md for original README message) \
 I will label any **loose ends** in bold, which you are free to remove after implementing or dismissing.
 
+## Quick explanation of free body diagrams
+A FBD illustrates the forces acting on a single object or system, isolated from its surroundings. The forces and moments acting on the object are all drawn. It is important that the distances are labelled correctly. It is also important that 
 
-## What we have so far and what is missing
-There is a website, called testing_canvas.html, which allows the user to draw a free body diagram.
-This website requires you to run the Flask server, called lil_server_for_testing_purposes.html.
- - There is a basic scoring system implemented. This works using the hungarian algorithm. I have custom metrics to determine how different an arrow is to it's target configuration. These are customisable, with more details in judge.py.
- - The website has some basic feedback implemented.
-    - **The score is not accurate when there are no arrows or moments drawn.**
-    - There are details about how many moments are expected and how many forces are expected.
-    - The score is visible.
-    - When an answer label and anoth label do not match up, there is an extra fixed distance added to the metric.
-    - There are warnings, that tell the user where the biggest problems are. The information from the hungarian algorithm is enough for you to figure out what force, etc is causing the problem and relay it to the user.
- - I will now explain how it handles distances.
-    - I am currently restricting myself to verifying distance markers that all lie on a line.
-        - **Identify the key points on the diagram that the distance markers need to reference and match up with answer**. These are for example the end-points and the position where a force is applied.
-        - Encode each of these nodes as a position on a line.
-        - This means a distance marker between two nodes, A and B, of length 2m, is encoded as B - A = 2.
-        - All of these equations from all the distance markers can be put into matrix form and we look at the RRE form and compare it with the answer.
+## High-level overview of features
+- There is a website that the user can use to draw (arrows only) free body diagrams over a background image (the beam in this case)
+- The backend gives feedback to the user, including:
+   - A score, which we want to minimise (if it's less than 0 the diagram is accepted)
+   - Excess forces
+   - Excess moments
+   - Whether or not the user-drawn distances are correct or not
+   - Warnings signs at places where there is something wrong, along with text to the side *
+- There is a tool to dynamically generate questions *
+- There are representations of user-drawn diagrams and model answers
+- There is functionality to display user-drawn diagrams as an svg, but this is not maintained and probably missing a lot of features
+- There is a website that allows the user to draw over a background image (like using a pen) and will save their answer as a png
+- Karl has provided two files involved with finding the RRE form of matrices (but with symbolic entries), and these are used in checking distances
+
+## Explanation of evaluation function algorithm
+The class `AnswerDiagram` contains the following:
+- a list of `AnswerForce`
+- a list of `AnswerMoment`
+- a list of `AnswerDistance`
+- tolerance, which is subtracted from the total cost at the end
+First, the Hungarian algorithm is used to match up the target forces with the user's forces. The weights are determined by customisable metrics. This is repeated for moments. \
+Next, we recalculate the positions of the `AnswerNode`s, to which the forces' positions are tied. This is done by doing a weighted average of fixed vectors and forces, weighted by matrices for further flexibility. Then we do the hungarian algorithm again, as the nodes have shifted. This is done once more for good luck. \
+We use the matchings to calculate the score, combining individual scores with the l4 norm (perhaps max is better idk). Then we move on to distance markers. \
+We match each endpoint of each distance marker to the closest node. Then we treat each node as a variable (x0, x1, ..., xn). A distance marker from node 2 to node 3 of length L is represented as x3 - x2 = L. Doing this for each distance marker gets us a system of equations, which we put in matrix form. We then compare the span of all the equations with the span of the model answer. \
+Finally, we add a punishment to the score for excess/too few forces or moments.
+
+
+## How to use `question_maker.py`
+to be written when it is finished
+
+## Known bugs, loose ends and possible features
+- Warnings signs do not always show up when necessary (they are currently only implemented for forces).
+- Warnings signs could show better messages, perhaps customisable.
+- BUG: Currently nodes have flexible positions, however there is nothing ensuring that nodes are in the right relative positions. It is entirely possible that the user swaps the positions of two nodes and still gets their diagram marked as right.
+- BUG: Nodes can be located off the edge of the beam.
+- POSSIBLE BUG: Each node's position is a weighted average of forces and positions, however if there are too few forces drawn by the user there is a possibility that it may not be able to find a particular force and thus crash the server.
+- Currently the weighted average to calculate each node's position does not take into account moments.
+- BUG: currently distance markers are checked by determining the nearest node to each endpoint. This is a problem as we can have very "slanted" or inaccurate distance markers still being marked as correct. Perhaps calculate the vectors from the endpoints to their respective nodes and compare them?
+- The `question_maker.py` file is currently not finished. *
+- The question maker does not support shapes other than straight lines.
+- The handling of moments needs some tweaking. Currently moments are stored as arrows, but they should probably be stored as a singular point, with an associated label, as that is how they are used. Also they could be tied to nodes.
+
 
 ## Image recognition stuff
 The idea is that a user can draw, by hand, a diagram, and then this is converted into our internal representation. \
@@ -31,25 +59,25 @@ This is one big loose end, so I will lay out what I have looked at so far:
  - There is a website, **roboflow**, which claims to provide tools to help label the data and build/train the model, even going so far as labelling it automatically. You may need to **look into the licence**, as it is not for commercial use.
  - potentially useful: [opencv.org](https://opencv.org/)
 
-## Guide to using it
+## Guide to using testing server
 - Install prerequesites by just doing `pip install -r requirements.txt`
-- Run `python lil_server_for_testing_purposes` to set up the server
-- Open up the file `testing_canvas.html` in your browser
+- Run `python testing_server` to set up the server
+- Open up the file `arrow_canvas.html` in your browser
 - Draw/move arrows using left mouse button and delete using right mouse button
 - You should now get live feedback every second
 - The target answer is stored in questions.py
 
 ## Guide to adding new feature (distributed loads):
 - Let us suppose, for simplicity, our distributed load is constant
-- Add a new type of arrow to `testing_canvas.html`, along with code to render and draw it
+- Add a new type of arrow to `arrow_canvas.html`, along with code to render and draw it
 - Add a `CoordDistributedLoad` class to `representation.py` to store information about what the user drew (using coordinates), such as
    - Start point
    - End point
    - Load label
    - Load direction
-- Add an `AnswerDistributedLoad` class to `judge.py` to store the model answer
+- Add an `AnswerDistributedLoad` class to `evaluation.py` to store the model answer
 - Store some `CoordDistributedLoad`s in `CoordRepr` and  `AnswerDistributedLoad`s in `AnswerDiagram`
-- Add a `distributed_load_metric` to `judge.py`, perhaps with some customisable parameters
+- Add a `distributed_load_metric` to `evaluation.py`, perhaps with some customisable parameters
 - Modify `AnswerDiagram.check_diagram()`so that it compares the distributed loads the user drew with the model answer
    - You can use `hungarian(target, ans)` where target is a list of `AnswerDistributedLoad` and ans is a list of `CoordDistributedLoad`
    - Note that everything in target must have a `dist(x)` function (that uses the metric to find the 'distance' from x)
