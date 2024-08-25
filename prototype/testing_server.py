@@ -13,7 +13,7 @@ CORS(app) # allow cross-origin requests
 
 def judge(diagram):
     # Process the diagram and return feedback
-    ans = testing.answer3
+    ans = testing.q
     feedback = ans.check_diagram(diagram)
     return jsonify({'feedback': f"""score: {feedback.score} <br>
 surplus forces: {feedback.surplus_forces} <br>

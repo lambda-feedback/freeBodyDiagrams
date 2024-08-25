@@ -33,7 +33,7 @@ Finally, we add a punishment to the score for excess/too few forces or moments.
 
 
 ## How to use `question_maker.py`
-to be written when it is finished
+There is an example of usage available in testing.py. The idea is that you specify the key nodes first, then add forces to those nodes. You can specify the number of nodes and/or their positions, but if you don't it will assume there are 2 nodes and assume they are evenly spaced out.
 
 ## Purpose of some files
 - canvas-drawing.json just serves as an example and can be deleted

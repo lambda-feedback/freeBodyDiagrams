@@ -1,5 +1,6 @@
 # NOTE: this file is not really used much anymore, but kept for reference and for eg3
 from evaluation import *
+from question_maker import *
 
 # test on example 3
 eg3 = CoordRepr(
@@ -89,7 +90,7 @@ answer3 = AnswerDiagram(
             metric = force_metric()
         ),
     ],
-    moments = [AnswerMoment(vec2(200, 300), False, "X", metric = moment_metric())],
+    moments = [AnswerMoment(0, False, "X", metric = moment_metric())],
 
     tolerance = 15,
 
@@ -98,6 +99,20 @@ answer3 = AnswerDiagram(
     # TODO: implement this
     context = ...
 )
+
+# example of how to create a question
+q = LineQuestionMaker(nodes=3)
+q.add_distance(0, 1, "L/2")
+q.add_distance(0, 2, "L")
+
+q.add_force(Orientation.HORIZONTAL, 0, "A_H", bidirectional=True)
+q.add_force(Orientation.VERTICAL, 0, "A_V", bidirectional=True)
+q.add_force(Orientation.VERTICAL, 2, "F_1")
+q.add_force(-Orientation.VERTICAL, 1, "B_V")
+
+q.add_moment(0, "X")
+
+q = q.build()
 
 # create image for question
 # UNCOMMENT TO GENERATE NEW IMAGE

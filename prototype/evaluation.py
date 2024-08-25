@@ -43,10 +43,15 @@ class AnswerForce:
 
 @dataclass
 class AnswerMoment:
-    pos: vec2
+    pos: int
     label: str
     clockwise: bool
     metric: "... -> float" # distance metric
+
+    parent: "AnswerDiagram" = None
+
+    def get_pos(self):
+        return self.parent.nodes[self.pos].get_pos()
 
     def dist(self, moment):
         return self.metric(self, moment)
@@ -73,7 +78,7 @@ def force_metric(bidirectional=False, dir_sensitivity=100, pos_matrix=np.array([
 
 def moment_metric():
     def fn(target, ans):
-        dist = norm(target.pos - ans.pos) * 0.15
+        dist = norm(target.get_pos() - ans.pos) * 0.15
         return dist
     return fn
 
